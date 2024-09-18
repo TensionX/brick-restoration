@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Houston Area Map</title>
+    <script src='https://api.mapbox.com/mapbox-gl-js/v2.9.1/mapbox-gl.js'></script>
+    <link href='https://api.mapbox.com/mapbox-gl-js/v2.9.1/mapbox-gl.css' rel='stylesheet' />
+    <style>
+        body { margin: 0; padding: 0; }
+        #map { position: absolute; top: 0; bottom: 0; width: 100%; }
+    </style>
+</head>
+<body>
+    <div id='map'></div>
+    <script src="settings.js"></script>
+    <script>
+        mapboxgl.accessToken = 'pk.eyJ1IjoidmxhZGh1IiwiYSI6ImNtMTcxOXhieDBsMHUybHF4bmRzMXlpOHUifQ.qfbmyIpKmCbjFGEtcxkTwQ';
+        const map = new mapboxgl.Map({
+            container: 'map',
+            style: 'mapbox://styles/mapbox/streets-v11',
+            center: [-95.3698, 29.7604],
+            zoom: 10
+        });
+
+        map.on('load', () => {
+            for (const [area, coordinates] of Object.entries(areaCoordinates)) {
+                const [minLng, minLat, maxLng, maxLat] = coordinates;
+                map.addLayer({
+                    id: area,
+                    type: 'fill',
+                    source: {
+                        type: 'geojson',
+                        data: {
+                            type: 'Feature',
+                            properties: {},
+                            geometry: {
+                                type: 'Polygon',
+                                coordinates: [[
+                                    [minLng, minLat],
+                                    [maxLng, minLat],
+                                    [maxLng, maxLat],
+                                    [minLng, maxLat],
+                                    [minLng, minLat]
+                                ]]
+                            }
+                        }
+                    },
+                    layout: {},
+                    paint: {
+                        'fill-color': '#088',
+                        'fill-opacity': 0.3
+                    }
+                });
+
+                map.addLayer({
+                    id: `${area}-outline`,
+                    type: 'line',
+                    source: {
+                        type: 'geojson',
+                        data: {
+                            type: 'Feature',
+                            properties: {},
+                            geometry: {
+                                type: 'Polygon',
+                                coordinates: [[
+                                    [minLng, minLat],
+                                    [maxLng, minLat],
+                                    [maxLng, maxLat],
+                                    [minLng, maxLat],
+                                    [minLng, minLat]
+                                ]]
+                            }
+                        }
+                    },
+                    layout: {},
+                    paint: {
+                        'line-color': '#088',
+                        'line-width': 2
+                    }
+                });
+
+                const popup = new mapboxgl.Popup({
+                    closeButton: false,
+                    closeOnClick: false
+                });
+
+                map.on('mouseenter', area, (e) => {
+                    map.getCanvas().style.cursor = 'pointer';
+                    popup.setLngLat(e.lngLat)
+                        .setHTML(area)
+                        .addTo(map);
+                });
+
+                map.on('mouseleave', area, () => {
+                    map.getCanvas().style.cursor = '';
+                    popup.remove();
+                });
+            }
+        });
+    </script>
+</body>
+</html>
